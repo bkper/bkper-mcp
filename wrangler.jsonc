@@ -1,0 +1,17 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "bkper-mcp",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-01-13",
+    "observability": {
+        "enabled": true
+    },
+    "compatibility_flags": ["nodejs_compat"],
+    "dev": {
+        "ip": "0.0.0.0"
+    }
+    // KV bindings for sessions will be added when OAuth is implemented
+    // "kv_namespaces": [
+    //     { "binding": "SESSIONS", "id": "..." }
+    // ]
+}

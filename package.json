@@ -1,0 +1,28 @@
+{
+    "name": "bkper-mcp",
+    "version": "0.1.0",
+    "description": "Bkper MCP Server - Remote Model Context Protocol server for Bkper",
+    "type": "module",
+    "private": true,
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "build": "npm run typecheck && wrangler deploy --dry-run --outdir dist",
+        "deploy": "wrangler deploy",
+        "dev": "wrangler dev --port 3062",
+        "types": "wrangler types",
+        "test": "bun test",
+        "clean": "rm -rf dist node_modules"
+    },
+    "devDependencies": {
+        "@bkper/bkper-api-types": "^5.32.3",
+        "@cloudflare/workers-types": "^4.20250102.0",
+        "@types/node": "^22.5.1",
+        "typescript": "^5.5.2",
+        "wrangler": "^4.38.0"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.13.1",
+        "bkper-js": "^2.18.0",
+        "hono": "^4.9.5"
+    }
+}
