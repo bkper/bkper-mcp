@@ -1,12 +1,6 @@
 import { Bkper } from 'bkper-js';
 
 /**
- * Default API proxy URL for clients without their own API key.
- * The proxy injects a managed API key server-side.
- */
-const API_PROXY_BASE_URL = 'https://api.bkper.app';
-
-/**
  * Environment bindings for the Cloudflare Worker
  */
 export interface Env {
@@ -18,6 +12,8 @@ export interface Env {
  * Get a configured Bkper instance for a request.
  * 
  * In remote MCP, authentication is handled per-request via OAuth token.
+ * If BKPER_API_KEY is set, uses direct API access (for power users with own quotas).
+ * Otherwise, bkper-js automatically uses the API proxy which injects a managed key server-side.
  * 
  * @param env - Cloudflare Worker environment bindings
  * @param oauthToken - OAuth token from the authenticated user
@@ -28,8 +24,7 @@ export function getBkperInstance(env: Env, oauthToken?: string): Bkper {
 
     const bkper = new Bkper({
         apiKeyProvider: apiKey ? async () => apiKey : undefined,
-        oauthTokenProvider: oauthToken ? async () => oauthToken : undefined,
-        apiBaseUrl: apiKey ? undefined : API_PROXY_BASE_URL
+        oauthTokenProvider: oauthToken ? async () => oauthToken : undefined
     });
 
     return bkper;

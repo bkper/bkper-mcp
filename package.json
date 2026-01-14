@@ -22,7 +22,7 @@
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.13.1",
-        "bkper-js": "^2.18.0",
+        "bkper-js": "^2.19.0",
         "hono": "^4.9.5"
     }
 }
