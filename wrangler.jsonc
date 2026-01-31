@@ -6,7 +6,7 @@
     "observability": {
         "enabled": true
     },
-    "compatibility_flags": ["nodejs_compat"],
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
     "dev": {
         "ip": "0.0.0.0"
     }
