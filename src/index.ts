@@ -1,21 +1,26 @@
 /**
  * Bkper MCP Server - Cloudflare Worker Entry Point
- * 
- * Remote-only MCP server using Hono for HTTP handling.
- * OAuth authentication will be added when deployment infrastructure is ready.
+ *
+ * Remote-only MCP server using Cloudflare OAuth provider routing.
  */
 
+import { OAuthProvider } from '@cloudflare/workers-oauth-provider';
+import { createMcpHandler } from 'agents/mcp';
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
-import { getBkperInstance, Env } from './bkper-factory.js';
+import { handleAuthorizeRequest } from './auth/authorize.js';
+import { getBkperInstance, type Env } from './bkper-factory.js';
+import { createOAuthProviderOptions, type HandlerWithFetch } from './oauth.js';
 import { BkperMcpServer } from './server.js';
+
+interface McpGrantProps {
+    userId: string;
+}
 
 const app = new Hono<{ Bindings: Env }>();
 
 app.use(prettyJSON());
-app.use(logger());
 
 // Health check
 app.get('/', (c) => {
@@ -27,31 +32,13 @@ app.get('/', (c) => {
     });
 });
 
-// MCP endpoint placeholder
-// TODO: Implement Streamable HTTP transport when OAuth is ready
-app.post('/mcp', async (c) => {
-    // For now, return a 501 Not Implemented
-    // This will be replaced with actual MCP handling once OAuth is implemented
-    return c.json({
-        error: 'not_implemented',
-        message: 'MCP endpoint not yet implemented. OAuth authentication and Streamable HTTP transport coming soon.'
-    }, 501);
+// OAuth authorization UI / session handoff.
+app.get('/authorize', async (c) => {
+    return handleAuthorizeRequest(c.req.raw, c.env);
 });
 
-// OAuth routes placeholder
-// TODO: Implement OAuth flow based on bkper-clients/packages/auth patterns
-app.get('/auth/login', (c) => {
-    return c.json({
-        error: 'not_implemented',
-        message: 'OAuth login not yet implemented.'
-    }, 501);
-});
-
-app.get('/auth/callback', (c) => {
-    return c.json({
-        error: 'not_implemented',
-        message: 'OAuth callback not yet implemented.'
-    }, 501);
+app.post('/authorize', async (c) => {
+    return handleAuthorizeRequest(c.req.raw, c.env);
 });
 
 // Tool list endpoint for discovery (no auth required)
@@ -62,7 +49,46 @@ app.get('/tools', async (c) => {
     return c.json(tools);
 });
 
-export default app;
+const defaultHandler: HandlerWithFetch = {
+    async fetch(request, env, ctx): Promise<Response> {
+        return app.fetch(request, env, ctx);
+    },
+};
+
+const mcpApiHandler: HandlerWithFetch = {
+    async fetch(request, env, ctx): Promise<Response> {
+        const grantProps = getMcpGrantProps(ctx);
+        if (!grantProps) {
+            return Response.json({ error: 'invalid_grant_props' }, { status: 401 });
+        }
+
+        const bkper = getBkperInstance(env);
+        const server = new BkperMcpServer(bkper);
+        // agents currently carries its own @modelcontextprotocol/sdk copy under Bun,
+        // so identical Server instances have incompatible private TypeScript fields.
+        const mcpServer = server.getServer() as unknown as Parameters<typeof createMcpHandler>[0];
+        return createMcpHandler(mcpServer, { route: '/mcp' })(request, env, ctx);
+    },
+};
+
+function getMcpGrantProps(ctx: ExecutionContext): McpGrantProps | null {
+    const props = (ctx as unknown as { props?: unknown }).props;
+    if (!props || typeof props !== 'object') {
+        return null;
+    }
+
+    const record = props as Record<string, unknown>;
+    if (typeof record.userId !== 'string' || record.userId.length === 0) {
+        return null;
+    }
+
+    return { userId: record.userId };
+}
+
+export default new OAuthProvider(createOAuthProviderOptions({
+    defaultHandler,
+    apiHandler: mcpApiHandler,
+}));
 
 // Export for testing
 export { BkperMcpServer } from './server.js';

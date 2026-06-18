@@ -1,11 +1,17 @@
+import type { OAuthHelpers } from '@cloudflare/workers-oauth-provider';
 import { Bkper } from 'bkper-js';
+
+export const BKPER_MCP_AGENT_ID = 'bkper-mcp';
 
 /**
  * Environment bindings for the Cloudflare Worker
  */
 export interface Env {
     BKPER_API_KEY?: string;
-    // OAuth token will be passed per-request in remote MCP
+    ENVIRONMENT?: string;
+    SESSIONS: KVNamespace;
+    OAUTH_KV: KVNamespace;
+    OAUTH_PROVIDER: OAuthHelpers;
 }
 
 /**
@@ -24,7 +30,8 @@ export function getBkperInstance(env: Env, oauthToken?: string): Bkper {
 
     const bkper = new Bkper({
         apiKeyProvider: apiKey ? async () => apiKey : undefined,
-        oauthTokenProvider: oauthToken ? async () => oauthToken : undefined
+        oauthTokenProvider: oauthToken ? async () => oauthToken : undefined,
+        agentIdProvider: async () => BKPER_MCP_AGENT_ID,
     });
 
     return bkper;

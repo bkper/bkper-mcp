@@ -10,8 +10,11 @@
     "dev": {
         "ip": "0.0.0.0"
     }
-    // KV bindings for sessions will be added when OAuth is implemented
+    // Required before deployment:
+    // - OAUTH_KV stores MCP OAuth clients, grants, access tokens, and refresh tokens.
+    // - SESSIONS must point at the same session KV namespace used by Bkper Dispatch.
     // "kv_namespaces": [
+    //     { "binding": "OAUTH_KV", "id": "..." },
     //     { "binding": "SESSIONS", "id": "..." }
     // ]
 }
