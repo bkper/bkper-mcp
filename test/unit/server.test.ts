@@ -45,4 +45,17 @@ describe('MCP Server - General Tests', () => {
             expect(error).toBeInstanceOf(Error);
         }
     });
+
+    it('should expose only read-only typed tools', async () => {
+        const response = await server.testListTools();
+        const toolNames = response.tools.map(tool => tool.name);
+
+        expect(toolNames).toEqual([
+            'list_books',
+            'get_book',
+            'get_balances',
+            'list_transactions',
+        ]);
+    });
+
 });

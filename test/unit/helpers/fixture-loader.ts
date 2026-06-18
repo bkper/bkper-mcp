@@ -52,24 +52,6 @@ export function loadTransactionsRaw(testDir: string): unknown {
     return JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
 }
 
-export interface TransactionInput {
-    date: string;
-    amount: number;
-    from_account: string;
-    to_account: string;
-    description: string;
-}
-
-export function loadTransactionTexts(testDir: string): {
-    validTransactions: TransactionInput[];
-    createdTransactions: TransactionData[];
-} {
-    return loadFixtureObject<{
-        validTransactions: TransactionInput[];
-        createdTransactions: TransactionData[];
-    }>(testDir, 'sample-transaction-texts.json');
-}
-
 // --- Accounts ---
 
 export function loadAccounts(testDir: string): AccountData[] {

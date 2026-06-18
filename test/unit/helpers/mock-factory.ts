@@ -287,35 +287,6 @@ export function createMockBkperForBook(
                       }
                     : undefined,
 
-                // Transaction creation support
-                batchCreateTransactions: transactions
-                    ? async (txArray: MockTransaction[]): Promise<MockTransaction[]> => {
-                          return txArray.map((tx, index) => {
-                              const txData = tx.json();
-                              const fixtureTransaction = transactions[index];
-
-                              return {
-                                  json: (): TransactionData => ({
-                                      ...txData,
-                                      id:
-                                          txData.id ||
-                                          fixtureTransaction?.id ||
-                                          `tx-created-${Date.now()}-${index}`,
-                                      posted: fixtureTransaction?.posted ?? true,
-                                      checked: fixtureTransaction?.checked ?? false,
-                                      trashed: fixtureTransaction?.trashed ?? false,
-                                      createdAt:
-                                          fixtureTransaction?.createdAt || Date.now().toString(),
-                                      createdBy:
-                                          fixtureTransaction?.createdBy || 'test@example.com',
-                                      creditAccount: fixtureTransaction?.creditAccount,
-                                      debitAccount: fixtureTransaction?.debitAccount,
-                                  }),
-                              };
-                          });
-                      }
-                    : undefined,
-
                 // Groups support
                 getGroups: groups
                     ? async (): Promise<MockGroup[]> => {

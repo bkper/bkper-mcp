@@ -20,8 +20,6 @@ import { handleGetBook, getBookToolDefinition } from './tools/get_book.js';
 import { handleGetBalances, getBalancesToolDefinition } from './tools/get_balances.js';
 import { handleListTransactions, listTransactionsToolDefinition } from './tools/list_transactions.js';
 import { handleListBooks, listBooksToolDefinition } from './tools/list_books.js';
-import { handleCreateTransactions, createTransactionsToolDefinition } from './tools/create_transactions.js';
-import { handleMergeTransactions, mergeTransactionsToolDefinition } from './tools/merge_transactions.js';
 
 export class BkperMcpServer {
     private server: Server;
@@ -52,8 +50,6 @@ export class BkperMcpServer {
                     getBookToolDefinition,
                     getBalancesToolDefinition,
                     listTransactionsToolDefinition,
-                    createTransactionsToolDefinition,
-                    mergeTransactionsToolDefinition,
                 ],
             };
         });
@@ -77,12 +73,6 @@ export class BkperMcpServer {
                         break;
                     case 'list_transactions':
                         result = await handleListTransactions(this.bkper, toolArgs as { bookId: string; query: string; cursor?: string; limit?: number });
-                        break;
-                    case 'create_transactions':
-                        result = await handleCreateTransactions(this.bkper, toolArgs as { bookId: string; transactions: Array<{ date: string; amount: number; from_account?: string; to_account?: string; description: string }> });
-                        break;
-                    case 'merge_transactions':
-                        result = await handleMergeTransactions(this.bkper, toolArgs as { bookId: string; transactionId1: string; transactionId2: string });
                         break;
                     default:
                         throw new McpError(

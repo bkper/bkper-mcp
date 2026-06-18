@@ -7,7 +7,7 @@ Remote Model Context Protocol (MCP) server for [Bkper](https://bkper.com) - enab
 **Work in Progress** - This package is being extracted from `bkper-cli` to become a standalone remote MCP server.
 
 ### Completed
-- Core MCP tools (6 tools)
+- Core read-only MCP tools (4 public typed tools)
 - Cloudflare Workers structure
 - Basic HTTP endpoints
 
@@ -24,8 +24,8 @@ Remote Model Context Protocol (MCP) server for [Bkper](https://bkper.com) - enab
 | `get_book` | Get book details and group hierarchy |
 | `get_balances` | Query account balances |
 | `list_transactions` | List transactions with pagination |
-| `create_transactions` | Batch create transactions |
-| `merge_transactions` | Merge duplicate transactions |
+
+Writes should go through the planned sandboxed `execute` Codemode tool.
 
 ## Development
 
@@ -54,13 +54,7 @@ src/
 │   ├── list_books.ts
 │   ├── get_book.ts
 │   ├── get_balances.ts
-│   ├── list_transactions.ts
-│   ├── create_transactions.ts
-│   └── merge_transactions.ts
-└── domain/               # Business logic
-    └── transaction/
-        ├── merge-operation.ts
-        └── merge-types.ts
+│   └── list_transactions.ts
 ```
 
 ## License

@@ -143,7 +143,6 @@ export interface MockBook {
         cursor?: string
     ): Promise<MockTransactionIterator>;
     getGroups?(): Promise<MockGroup[]>;
-    batchCreateTransactions?(transactions: MockTransaction[]): Promise<MockTransaction[]>;
 }
 
 export interface MockTransaction {
