@@ -11,8 +11,13 @@
         "ip": "0.0.0.0"
     }
     // Required before deployment:
+    // - API_DOMAIN points at the Bkper API domain, e.g. api.bkper.app or api-dev.bkper.app.
+    // - GOOGLE_SERVICE_ACCOUNT_KEY contains the service account JSON used for Private API calls.
     // - OAUTH_KV stores MCP OAuth clients, grants, access tokens, and refresh tokens.
     // - SESSIONS must point at the same session KV namespace used by Bkper Dispatch.
+    // "vars": {
+    //     "API_DOMAIN": "api-dev.bkper.app"
+    // }
     // "kv_namespaces": [
     //     { "binding": "OAUTH_KV", "id": "..." },
     //     { "binding": "SESSIONS", "id": "..." }

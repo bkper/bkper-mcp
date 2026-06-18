@@ -25,6 +25,7 @@
         "@modelcontextprotocol/sdk": "1.29.0",
         "agents": "^0.16.2",
         "bkper-js": "^2.19.0",
+        "google-auth-library": "^10.7.0",
         "hono": "^4.9.5"
     }
 }

@@ -11,12 +11,9 @@ import { prettyJSON } from 'hono/pretty-json';
 
 import { handleAuthorizeRequest } from './auth/authorize.js';
 import { getBkperInstance, type Env } from './bkper-factory.js';
+import { getMcpAccessTokenForGrant } from './mcp-auth.js';
 import { createOAuthProviderOptions, type HandlerWithFetch } from './oauth.js';
 import { BkperMcpServer } from './server.js';
-
-interface McpGrantProps {
-    userId: string;
-}
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -57,12 +54,19 @@ const defaultHandler: HandlerWithFetch = {
 
 const mcpApiHandler: HandlerWithFetch = {
     async fetch(request, env, ctx): Promise<Response> {
-        const grantProps = getMcpGrantProps(ctx);
-        if (!grantProps) {
+        let oauthToken: string | null;
+        try {
+            oauthToken = await getMcpAccessTokenForGrant(env, ctx);
+        } catch (error) {
+            console.error('Failed to refresh Bkper OAuth token for MCP request:', error);
+            return Response.json({ error: 'token_refresh_failed' }, { status: 502 });
+        }
+
+        if (!oauthToken) {
             return Response.json({ error: 'invalid_grant_props' }, { status: 401 });
         }
 
-        const bkper = getBkperInstance(env);
+        const bkper = getBkperInstance(env, oauthToken);
         const server = new BkperMcpServer(bkper);
         // agents currently carries its own @modelcontextprotocol/sdk copy under Bun,
         // so identical Server instances have incompatible private TypeScript fields.
@@ -70,20 +74,6 @@ const mcpApiHandler: HandlerWithFetch = {
         return createMcpHandler(mcpServer, { route: '/mcp' })(request, env, ctx);
     },
 };
-
-function getMcpGrantProps(ctx: ExecutionContext): McpGrantProps | null {
-    const props = (ctx as unknown as { props?: unknown }).props;
-    if (!props || typeof props !== 'object') {
-        return null;
-    }
-
-    const record = props as Record<string, unknown>;
-    if (typeof record.userId !== 'string' || record.userId.length === 0) {
-        return null;
-    }
-
-    return { userId: record.userId };
-}
 
 export default new OAuthProvider(createOAuthProviderOptions({
     defaultHandler,

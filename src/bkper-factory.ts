@@ -7,6 +7,8 @@ export const BKPER_MCP_AGENT_ID = 'bkper-mcp';
  * Environment bindings for the Cloudflare Worker
  */
 export interface Env {
+    API_DOMAIN: string;
+    GOOGLE_SERVICE_ACCOUNT_KEY: string;
     BKPER_API_KEY?: string;
     ENVIRONMENT?: string;
     SESSIONS: KVNamespace;

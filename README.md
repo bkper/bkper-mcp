@@ -39,6 +39,15 @@ Bkper MCP is designed as first-party access to Bkper:
 
 Only connect AI assistants and MCP clients you trust.
 
+## Deployment Configuration
+
+The remote server needs first-party Bkper infrastructure bindings before deployment:
+
+- `API_DOMAIN` — Bkper API domain, such as `api.bkper.app` or `api-dev.bkper.app`.
+- `GOOGLE_SERVICE_ACCOUNT_KEY` — service account JSON for Bkper Private API calls.
+- `OAUTH_KV` — stores MCP OAuth clients, grants, access tokens, and refresh tokens.
+- `SESSIONS` — shared Dispatch session KV used for Bkper web session handoff.
+
 ## Bkper References
 
 - [Core Concepts](https://bkper.com/docs/core-concepts.md)
