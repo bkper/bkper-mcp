@@ -1,61 +1,49 @@
-# Bkper MCP Server
+# Bkper MCP
 
-Remote Model Context Protocol (MCP) server for [Bkper](https://bkper.com) - enabling AI assistants to interact with financial data.
+Connect AI assistants to [Bkper](https://bkper.com) through a first-party Model Context Protocol (MCP) server.
+
+Bkper MCP lets compatible AI clients read Bkper books, balances, and transactions using your existing Bkper permissions. Advanced workflows are planned through a sandboxed execution environment that uses the official `bkper-js` SDK while keeping Bkper Core responsible for permissions, audit, and ledger invariants.
 
 ## Status
 
-**Work in Progress** - This package is being extracted from `bkper-cli` to become a standalone remote MCP server.
+Bkper MCP is in development and is planned for:
 
-### Completed
-- Core read-only MCP tools (4 public typed tools)
-- Cloudflare Workers structure
-- Basic HTTP endpoints
-
-### TODO
-- OAuth authentication (PKCE flow)
-- Streamable HTTP transport implementation
-- Deployment to `mcp.bkper.app`
-
-## Tools
-
-| Tool | Description |
-|------|-------------|
-| `list_books` | List books with filtering |
-| `get_book` | Get book details and group hierarchy |
-| `get_balances` | Query account balances |
-| `list_transactions` | List transactions with pagination |
-
-Writes should go through the planned sandboxed `execute` Codemode tool.
-
-## Development
-
-```bash
-# Install dependencies
-bun install
-
-# Type check
-bun run typecheck
-
-# Run locally
-bun run dev
-
-# Build
-bun run build
+```text
+https://mcp.bkper.app
 ```
 
-## Architecture
+Public connection instructions will be added when the hosted service is available.
 
-```
-src/
-├── index.ts              # Hono app entry point
-├── server.ts             # MCP server implementation
-├── bkper-factory.ts      # Bkper SDK configuration
-├── tools/                # MCP tool handlers
-│   ├── list_books.ts
-│   ├── get_book.ts
-│   ├── get_balances.ts
-│   └── list_transactions.ts
-```
+## What You Can Do
+
+The initial public typed tools are read-only:
+
+| Capability | Description |
+|-----------|-------------|
+| List books | Find Bkper books available to your account |
+| Get book details | Inspect book metadata, accounts, groups, and hierarchy |
+| Query balances | Ask for balances using Bkper queries |
+| List transactions | Search and paginate transactions |
+
+Write workflows are planned for the sandboxed Codemode `execute` tool. All writes will still go through Bkper Core and use the same permissions, audit rules, and zero-sum transaction invariants as the Bkper app and API.
+
+## Security Model
+
+Bkper MCP is designed as first-party access to Bkper:
+
+- You authenticate with your Bkper account.
+- The MCP server acts with your existing Bkper permissions.
+- Raw Bkper OAuth tokens are not exposed to MCP clients.
+- Bkper Core remains the authority for permissions and audit.
+- Actions are attributed to the Bkper MCP app identity.
+
+Only connect AI assistants and MCP clients you trust.
+
+## Bkper References
+
+- [Core Concepts](https://bkper.com/docs/core-concepts.md)
+- [bkper-js API](https://bkper.com/docs/api/bkper-js.md)
+- [LLM documentation index](https://bkper.com/llms.txt)
 
 ## License
 
