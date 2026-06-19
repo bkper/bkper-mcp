@@ -14,6 +14,7 @@ import { handleGetBook, getBookToolDefinition } from './tools/get_book.js';
 import { handleGetBalances, getBalancesToolDefinition } from './tools/get_balances.js';
 import { handleListTransactions, listTransactionsToolDefinition } from './tools/list_transactions.js';
 import { handleListBooks, listBooksToolDefinition } from './tools/list_books.js';
+import { handleReferenceIndex, referenceIndexToolDefinition } from './tools/reference_index.js';
 
 const listBooksInputSchema = {
     filter: z.string().describe(listBooksToolDefinition.inputSchema.properties.filter.description),
@@ -38,6 +39,8 @@ const listTransactionsInputSchema = {
         .optional()
         .describe(listTransactionsToolDefinition.inputSchema.properties.limit.description),
 };
+
+const referenceIndexInputSchema = {};
 
 type RequestHandler = (request: unknown) => Promise<unknown>;
 
@@ -99,6 +102,15 @@ export class BkperMcpServer {
                 inputSchema: listTransactionsInputSchema,
             },
             (args) => handleListTransactions(this.bkper, args),
+        );
+
+        this.server.registerTool(
+            referenceIndexToolDefinition.name,
+            {
+                description: referenceIndexToolDefinition.description,
+                inputSchema: referenceIndexInputSchema,
+            },
+            () => handleReferenceIndex(),
         );
     }
 

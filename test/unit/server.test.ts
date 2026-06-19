@@ -47,7 +47,7 @@ describe('MCP Server - General Tests', () => {
         }
     });
 
-    it('should expose only read-only typed tools', async () => {
+    it('should expose read-only typed tools and reference helper', async () => {
         const response = await server.testListTools();
         const toolNames = response.tools.map(tool => tool.name);
 
@@ -56,6 +56,7 @@ describe('MCP Server - General Tests', () => {
             'get_book',
             'get_balances',
             'list_transactions',
+            'reference_index',
         ]);
     });
 
