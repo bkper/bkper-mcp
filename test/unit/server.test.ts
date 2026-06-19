@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { BkperMcpServer } from '../../src/server.js';
 import { BookData, BkperMcpServerType } from './helpers/mock-interfaces.js';
 import { createMockBkperForBooks } from './helpers/mock-factory.js';
@@ -21,7 +22,7 @@ describe('MCP Server - General Tests', () => {
             throw new Error('Should have thrown an error');
         } catch (error) {
             expect(error).toBeInstanceOf(Error);
-            expect((error as Error).message).toContain('Unknown tool');
+            expect((error as Error).message).toContain('Tool unknown_tool not found');
         }
     });
 
@@ -56,6 +57,10 @@ describe('MCP Server - General Tests', () => {
             'get_balances',
             'list_transactions',
         ]);
+    });
+
+    it('should expose the high-level McpServer expected by Cloudflare createMcpHandler', () => {
+        expect(server.getServer()).toBeInstanceOf(McpServer);
     });
 
 });

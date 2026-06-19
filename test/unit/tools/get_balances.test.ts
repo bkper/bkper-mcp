@@ -56,6 +56,7 @@ describe('MCP Server - get_balances Tool Registration', () => {
 
         expect(getBalancesTool).toBeDefined();
         expect(getBalancesTool!.inputSchema).toEqual({
+            $schema: 'http://json-schema.org/draft-07/schema#',
             type: 'object',
             properties: {
                 bookId: {

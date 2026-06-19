@@ -119,6 +119,7 @@ describe('MCP Server - get_book Tool Registration', () => {
 
         expect(getBookTool).toBeDefined();
         expect(getBookTool!.inputSchema).toEqual({
+            $schema: 'http://json-schema.org/draft-07/schema#',
             type: 'object',
             properties: {
                 bookId: {

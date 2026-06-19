@@ -37,6 +37,7 @@ describe('MCP Server - list_books Tool Registration', () => {
         const listBooksTool = response.tools.find((tool: any) => tool.name === 'list_books');
 
         expect(listBooksTool!.inputSchema).toEqual({
+            $schema: 'http://json-schema.org/draft-07/schema#',
             type: 'object',
             properties: {
                 filter: {
