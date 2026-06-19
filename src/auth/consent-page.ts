@@ -3,13 +3,16 @@ import type { ClientInfo } from '@cloudflare/workers-oauth-provider';
 export interface ConsentPageOptions {
     requestUrl: string;
     clientInfo: ClientInfo | null;
-    consentNonce: string;
+    csrfToken: string;
+    consentCookie: string;
+    redirectUri: string;
 }
 
 export function renderConsentPage(options: ConsentPageOptions): Response {
     const approveUrl = new URL(options.requestUrl);
     approveUrl.searchParams.set('approve', '1');
-    approveUrl.searchParams.delete('consent_nonce');
+    approveUrl.searchParams.delete('csrf_token');
+    const approvePathAndQuery = `${approveUrl.pathname}${approveUrl.search}`;
 
     const clientName = getClientDisplayName(options.clientInfo, 'this AI assistant');
 
@@ -35,33 +38,47 @@ export function renderConsentPage(options: ConsentPageOptions): Response {
     <p>It can read and change data that your Bkper account can access, using the same permissions you have in Bkper.</p>
     <p>Actions are recorded in Bkper activity and attributed to <strong>Bkper MCP</strong>.</p>
     <p class="warning">Only connect assistants you trust.</p>
-    <form class="actions" method="post" action="${escapeHtml(approveUrl.toString())}">
-      <input type="hidden" name="consent_nonce" value="${escapeHtml(options.consentNonce)}">
+    <form class="actions" method="post" action="${escapeHtml(approvePathAndQuery)}">
+      <input type="hidden" name="csrf_token" value="${escapeHtml(options.csrfToken)}">
       <button type="submit">Connect Bkper MCP</button>
     </form>
   </main>
 </body>
 </html>`, {
         status: 200,
-        headers: getConsentPageHeaders(),
+        headers: getConsentPageHeaders(options.consentCookie, options.redirectUri),
     });
 }
 
-function getConsentPageHeaders(): HeadersInit {
+function getConsentPageHeaders(consentCookie: string, redirectUri: string): HeadersInit {
+    const allowedFormActions = ["'self'", getUrlOrigin(redirectUri)].filter((source): source is string => source !== null);
     return {
         'Content-Type': 'text/html; charset=utf-8',
         'Content-Security-Policy': [
             "default-src 'none'",
             "style-src 'unsafe-inline'",
-            "form-action 'self'",
+            `form-action ${allowedFormActions.join(' ')}`,
             "frame-ancestors 'none'",
             "base-uri 'self'",
         ].join('; '),
+        'Set-Cookie': consentCookie,
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',
         'Referrer-Policy': 'no-referrer',
         'Cache-Control': 'no-store',
     };
+}
+
+function getUrlOrigin(value: string): string | null {
+    try {
+        const url = new URL(value);
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return null;
+        }
+        return url.origin;
+    } catch {
+        return null;
+    }
 }
 
 function getClientDisplayName(clientInfo: ClientInfo | null, fallback: string): string {

@@ -129,6 +129,8 @@ Consent should be broad and honest:
 
 A read-only/full split is not part of MVP. It can be revisited later if Core supports scoped tokens or if product UX clearly needs it.
 
+Consent form approval must not rely on Workers KV read-after-write behavior. Use a short-lived `__Host-` secure, HttpOnly, SameSite=Lax cookie containing a server-generated CSRF challenge bound to the normalized OAuth request, and include only the CSRF token in the hidden form field. On POST, validate the Bkper web session, the CSRF token, and the OAuth request binding before calling `completeAuthorization`, then clear the cookie. This cookie carries no Bkper user identity, Bkper OAuth token, or MCP grant authority.
+
 ## App / Agent Identity
 
 Create a canonical Bkper App identity for MCP:

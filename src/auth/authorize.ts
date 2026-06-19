@@ -4,22 +4,18 @@ import { renderConsentPage } from './consent-page.js';
 import { getAuthenticatedSession, type EnvironmentBinding, type SessionStore } from './session.js';
 
 const BKPER_MCP_APP_ID = 'bkper-mcp';
-const CONSENT_PREFIX = 'mcp-consent:';
+const CONSENT_COOKIE_NAME = '__Host-bkper_mcp_csrf';
 const CONSENT_TTL_SECONDS = 10 * 60;
 
-interface ConsentStore extends SessionStore {
-    put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
-    delete(key: string): Promise<void>;
-}
-
 export interface AuthorizeEnv extends EnvironmentBinding {
-    SESSIONS: ConsentStore;
+    SESSIONS: SessionStore;
     OAUTH_PROVIDER: Pick<OAuthHelpers, 'parseAuthRequest' | 'lookupClient' | 'completeAuthorization'>;
 }
 
-interface StoredConsent {
-    sessionId: string;
+interface ConsentChallenge {
+    csrfToken: string;
     oauthRequest: NormalizedAuthRequest;
+    expiresAt: number;
 }
 
 interface NormalizedAuthRequest {
@@ -33,6 +29,10 @@ interface NormalizedAuthRequest {
     resource: string | string[] | null;
 }
 
+type ConsentApproval =
+    | { approved: true; clearCookie: string }
+    | { approved: false; reason: string };
+
 export async function handleAuthorizeRequest(request: Request, env: AuthorizeEnv): Promise<Response> {
     const oauthRequest = await env.OAUTH_PROVIDER.parseAuthRequest(request);
     const session = await getAuthenticatedSession(request.headers.get('Cookie'), env, env.SESSIONS);
@@ -42,13 +42,20 @@ export async function handleAuthorizeRequest(request: Request, env: AuthorizeEnv
     }
 
     const clientInfo = await env.OAUTH_PROVIDER.lookupClient(oauthRequest.clientId);
+    const approval = await validateConsentApproval(request, oauthRequest);
 
-    if (!await isApproved(request, env, session.sessionId, oauthRequest)) {
-        const consentNonce = await storeConsent(env, session.sessionId, oauthRequest);
+    if (!approval.approved) {
+        if (request.method === 'POST') {
+            console.warn(`MCP consent approval rejected: ${approval.reason}`);
+        }
+
+        const challenge = createConsentChallenge(oauthRequest);
         return renderConsentPage({
             requestUrl: request.url,
             clientInfo,
-            consentNonce,
+            csrfToken: challenge.csrfToken,
+            consentCookie: buildConsentCookie(challenge),
+            redirectUri: oauthRequest.redirectUri,
         });
     }
 
@@ -67,86 +74,152 @@ export async function handleAuthorizeRequest(request: Request, env: AuthorizeEnv
         },
     });
 
-    return Response.redirect(redirectTo, 302);
+    return new Response(null, {
+        status: 302,
+        headers: {
+            Location: redirectTo,
+            'Set-Cookie': approval.clearCookie,
+        },
+    });
 }
 
-async function isApproved(
+async function validateConsentApproval(
     request: Request,
-    env: AuthorizeEnv,
-    sessionId: string,
     oauthRequest: AuthRequest
-): Promise<boolean> {
+): Promise<ConsentApproval> {
     if (request.method !== 'POST') {
-        return false;
+        return { approved: false, reason: 'not_post' };
     }
 
     const url = new URL(request.url);
     if (url.searchParams.get('approve') !== '1') {
-        return false;
+        return { approved: false, reason: 'missing_approve' };
     }
 
-    const nonce = await readConsentNonce(request);
-    if (!nonce) {
-        return false;
+    const formData = await readFormData(request);
+    if (!formData) {
+        return { approved: false, reason: 'invalid_form' };
     }
 
-    const consentKey = getConsentKey(sessionId, nonce);
-    const storedConsentString = await env.SESSIONS.get(consentKey);
-    await env.SESSIONS.delete(consentKey);
-
-    if (!storedConsentString) {
-        return false;
+    const csrfToken = formData.get('csrf_token');
+    if (typeof csrfToken !== 'string' || csrfToken.length === 0) {
+        return { approved: false, reason: 'missing_csrf_token' };
     }
 
-    const storedConsent = parseStoredConsent(storedConsentString);
-    if (!storedConsent) {
-        return false;
+    const challengeCookie = getCookieValue(request.headers.get('Cookie'), CONSENT_COOKIE_NAME);
+    if (!challengeCookie) {
+        return { approved: false, reason: 'missing_csrf_cookie' };
     }
 
-    return storedConsent.sessionId === sessionId
-        && areAuthRequestsEqual(storedConsent.oauthRequest, normalizeAuthRequest(oauthRequest));
+    const challenge = parseConsentChallenge(challengeCookie);
+    if (!challenge) {
+        return { approved: false, reason: 'invalid_csrf_cookie' };
+    }
+
+    if (challenge.expiresAt < Date.now()) {
+        return { approved: false, reason: 'expired_csrf_cookie' };
+    }
+
+    if (challenge.csrfToken !== csrfToken) {
+        return { approved: false, reason: 'csrf_mismatch' };
+    }
+
+    if (!areAuthRequestsEqual(challenge.oauthRequest, normalizeAuthRequest(oauthRequest))) {
+        return { approved: false, reason: 'oauth_request_mismatch' };
+    }
+
+    return { approved: true, clearCookie: buildClearConsentCookie() };
 }
 
-async function readConsentNonce(request: Request): Promise<string | null> {
+async function readFormData(request: Request): Promise<FormData | null> {
     try {
-        const formData = await request.formData();
-        const nonce = formData.get('consent_nonce');
-        return typeof nonce === 'string' && nonce.length > 0 ? nonce : null;
+        return await request.formData();
     } catch {
         return null;
     }
 }
 
-async function storeConsent(env: AuthorizeEnv, sessionId: string, oauthRequest: AuthRequest): Promise<string> {
-    const consentNonce = crypto.randomUUID();
-    const storedConsent: StoredConsent = {
-        sessionId,
+function createConsentChallenge(oauthRequest: AuthRequest): ConsentChallenge {
+    return {
+        csrfToken: crypto.randomUUID(),
         oauthRequest: normalizeAuthRequest(oauthRequest),
+        expiresAt: Date.now() + CONSENT_TTL_SECONDS * 1000,
     };
-
-    await env.SESSIONS.put(getConsentKey(sessionId, consentNonce), JSON.stringify(storedConsent), {
-        expirationTtl: CONSENT_TTL_SECONDS,
-    });
-
-    return consentNonce;
 }
 
-function parseStoredConsent(value: string): StoredConsent | null {
+function buildConsentCookie(challenge: ConsentChallenge): string {
+    return `${CONSENT_COOKIE_NAME}=${encodeCookieJson(challenge)}; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=${CONSENT_TTL_SECONDS}`;
+}
+
+function buildClearConsentCookie(): string {
+    return `${CONSENT_COOKIE_NAME}=; HttpOnly; Secure; Path=/; SameSite=Lax; Max-Age=0`;
+}
+
+function parseConsentChallenge(value: string): ConsentChallenge | null {
+    const decoded = decodeCookieJson(value);
+    if (!decoded) {
+        return null;
+    }
+
     try {
-        const parsed = JSON.parse(value) as unknown;
-        if (!parsed || typeof parsed !== 'object') {
+        const parsed = JSON.parse(decoded) as unknown;
+        if (!isConsentChallenge(parsed)) {
             return null;
         }
+        return parsed;
+    } catch {
+        return null;
+    }
+}
 
-        const record = parsed as Record<string, unknown>;
-        if (typeof record.sessionId !== 'string' || !isNormalizedAuthRequest(record.oauthRequest)) {
-            return null;
+function isConsentChallenge(value: unknown): value is ConsentChallenge {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    const record = value as Record<string, unknown>;
+    return typeof record.csrfToken === 'string'
+        && record.csrfToken.length > 0
+        && typeof record.expiresAt === 'number'
+        && Number.isFinite(record.expiresAt)
+        && isNormalizedAuthRequest(record.oauthRequest);
+}
+
+function getCookieValue(cookieHeader: string | null, name: string): string | null {
+    if (!cookieHeader) {
+        return null;
+    }
+
+    const cookies = cookieHeader.split(';').map(cookie => cookie.trim());
+    for (const cookie of cookies) {
+        const separatorIndex = cookie.indexOf('=');
+        if (separatorIndex < 0) {
+            continue;
         }
 
-        return {
-            sessionId: record.sessionId,
-            oauthRequest: record.oauthRequest,
-        };
+        const cookieName = cookie.slice(0, separatorIndex);
+        if (cookieName === name) {
+            return cookie.slice(separatorIndex + 1) || null;
+        }
+    }
+
+    return null;
+}
+
+function encodeCookieJson(value: ConsentChallenge): string {
+    const json = JSON.stringify(value);
+    const bytes = new TextEncoder().encode(json);
+    const binary = Array.from(bytes, byte => String.fromCharCode(byte)).join('');
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function decodeCookieJson(value: string): string | null {
+    try {
+        const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+        const binary = atob(padded);
+        const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
     } catch {
         return null;
     }
@@ -206,10 +279,6 @@ function getRootBkperAppUrl(env: EnvironmentBinding): string {
         return 'https://dev.bkper.app';
     }
     return 'https://bkper.app';
-}
-
-function getConsentKey(sessionId: string, nonce: string): string {
-    return `${CONSENT_PREFIX}${sessionId}:${nonce}`;
 }
 
 function getClientDisplayName(clientInfo: ClientInfo | null, fallback: string): string {

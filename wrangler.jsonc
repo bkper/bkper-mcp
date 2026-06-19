@@ -6,20 +6,26 @@
     "observability": {
         "enabled": true
     },
+    "account_id": "dc486d4fec05c6010ea61a55167b5a3b",
     "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "env": {
+        "dev": {
+            "name": "bkper-mcp-dev",
+            "vars": {
+                "ENVIRONMENT": "dev",
+                "API_DOMAIN": "dev.bkper.com"
+            },
+            "kv_namespaces": [
+                { "binding": "OAUTH_KV", "id": "895ac9e466d44e56a7a10a455001c978" },
+                { "binding": "SESSIONS", "id": "195afceb3ebf4dd7b297d0b6226f9c66" }
+            ],
+            "routes": [
+                { "pattern": "mcp-dev.bkper.app/*", "zone_name": "bkper.app" },
+                { "pattern": "mcp-dev.bkper.app", "zone_name": "bkper.app" }
+            ]
+        }
+    },
     "dev": {
         "ip": "0.0.0.0"
     }
-    // Required before deployment:
-    // - API_DOMAIN points at the Bkper API domain, e.g. api.bkper.app or api-dev.bkper.app.
-    // - GOOGLE_SERVICE_ACCOUNT_KEY contains the service account JSON used for Private API calls.
-    // - OAUTH_KV stores MCP OAuth clients, grants, access tokens, and refresh tokens.
-    // - SESSIONS must point at the same session KV namespace used by Bkper Dispatch.
-    // "vars": {
-    //     "API_DOMAIN": "api-dev.bkper.app"
-    // }
-    // "kv_namespaces": [
-    //     { "binding": "OAUTH_KV", "id": "..." },
-    //     { "binding": "SESSIONS", "id": "..." }
-    // ]
 }

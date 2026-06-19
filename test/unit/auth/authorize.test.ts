@@ -81,10 +81,10 @@ async function renderConsent(
     return { response, html: await response.text(), env, oauth };
 }
 
-function extractConsentNonce(html: string): string {
-    const match = html.match(/name="consent_nonce" value="([^"]+)"/);
+function extractCsrfToken(html: string): string {
+    const match = html.match(/name="csrf_token" value="([^"]+)"/);
     if (!match) {
-        throw new Error('Consent nonce not found');
+        throw new Error('CSRF token not found');
     }
     return match[1];
 }
@@ -97,14 +97,27 @@ function extractFormAction(html: string): string {
     return match[1].replace(/&amp;/g, '&');
 }
 
-function createApprovalRequest(nonce: string, requestUrl = 'https://mcp.bkper.app/authorize?client_id=client-123&approve=1'): Request {
+function extractConsentCookie(response: Response): string {
+    const setCookie = response.headers.get('Set-Cookie');
+    const match = setCookie?.match(/(__Host-bkper_mcp_csrf=[^;]+)/);
+    if (!match) {
+        throw new Error('Consent cookie not found');
+    }
+    return match[1];
+}
+
+function createApprovalRequest(
+    csrfToken: string,
+    consentCookie: string,
+    requestUrl = 'https://mcp.bkper.app/authorize?client_id=client-123&approve=1'
+): Request {
     return new Request(requestUrl, {
         method: 'POST',
         headers: {
-            Cookie: 'bkper_session=session-123',
+            Cookie: `bkper_session=session-123; ${consentCookie}`,
             'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({ consent_nonce: nonce }),
+        body: new URLSearchParams({ csrf_token: csrfToken }),
     });
 }
 
@@ -127,23 +140,38 @@ describe('authorize route', () => {
         const { response, html } = await renderConsent(new MemorySessionStore());
 
         expect(response.headers.get('Content-Security-Policy')).toContain("frame-ancestors 'none'");
+        expect(response.headers.get('Content-Security-Policy')).toContain("form-action 'self' https://assistant.example");
         expect(response.headers.get('X-Frame-Options')).toBe('DENY');
         expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
         expect(response.headers.get('Referrer-Policy')).toBe('no-referrer');
         expect(response.headers.get('Cache-Control')).toBe('no-store');
+        expect(response.headers.get('Set-Cookie')).toContain('__Host-bkper_mcp_csrf=');
+        expect(response.headers.get('Set-Cookie')).toContain('HttpOnly');
+        expect(response.headers.get('Set-Cookie')).toContain('Secure');
+        expect(response.headers.get('Set-Cookie')).toContain('SameSite=Lax');
+        expect(response.headers.get('Set-Cookie')).toContain('Path=/');
         expect(html).toContain('Connect Bkper MCP');
         expect(html).toContain('Trusted Assistant');
         expect(html).toContain('read and change data');
         expect(html).toContain('method="post"');
-        expect(html).toContain('name="consent_nonce"');
+        expect(html).toContain('name="csrf_token"');
     });
 
-    it('keeps consent nonce out of the approval URL', async () => {
+    it('keeps CSRF token out of the approval URL', async () => {
         const { html } = await renderConsent(new MemorySessionStore());
-        const action = new URL(extractFormAction(html));
+        const rawAction = extractFormAction(html);
+        const action = new URL(rawAction, 'https://mcp.bkper.app');
 
+        expect(rawAction.startsWith('/authorize?')).toBe(true);
         expect(action.searchParams.get('approve')).toBe('1');
-        expect(action.searchParams.has('consent_nonce')).toBe(false);
+        expect(action.searchParams.has('csrf_token')).toBe(false);
+    });
+
+    it('allows the OAuth client callback origin in form-action for consent redirects', async () => {
+        const requestUrl = 'https://mcp.bkper.app/authorize?client_id=client-123&redirect_uri=http%3A%2F%2Flocalhost%3A6274%2Foauth%2Fcallback';
+        const { response } = await renderConsent(new MemorySessionStore(), new FakeOAuthHelpers(), requestUrl);
+
+        expect(response.headers.get('Content-Security-Policy')).toContain("form-action 'self' http://localhost:6274");
     });
 
     it('does not complete authorization from a GET approval URL', async () => {
@@ -162,16 +190,30 @@ describe('authorize route', () => {
         expect(oauth.completedAuthorization).toBeNull();
     });
 
-    it('does not complete authorization if the posted consent nonce is bound to a different OAuth request', async () => {
+    it('does not complete authorization if the CSRF cookie is bound to a different OAuth request', async () => {
         const store = new MemorySessionStore();
         const oauth = new FakeOAuthHelpers();
-        const { html, env } = await renderConsent(store, oauth);
-        const nonce = extractConsentNonce(html);
+        const { response: consentResponse, html, env } = await renderConsent(store, oauth);
+        const csrfToken = extractCsrfToken(html);
+        const consentCookie = extractConsentCookie(consentResponse);
 
         const response = await handleAuthorizeRequest(
-            createApprovalRequest(nonce, 'https://mcp.bkper.app/authorize?client_id=client-456&approve=1'),
+            createApprovalRequest(csrfToken, consentCookie, 'https://mcp.bkper.app/authorize?client_id=client-456&approve=1'),
             env
         );
+
+        expect(response.status).toBe(200);
+        expect(oauth.completedAuthorization).toBeNull();
+    });
+
+    it('does not complete authorization if the posted CSRF token does not match the secure cookie', async () => {
+        const store = new MemorySessionStore();
+        const oauth = new FakeOAuthHelpers();
+        const { response: consentResponse, html, env } = await renderConsent(store, oauth);
+        const csrfToken = extractCsrfToken(html);
+        const consentCookie = extractConsentCookie(consentResponse);
+
+        const response = await handleAuthorizeRequest(createApprovalRequest('different-token', consentCookie), env);
 
         expect(response.status).toBe(200);
         expect(oauth.completedAuthorization).toBeNull();
@@ -180,13 +222,16 @@ describe('authorize route', () => {
     it('completes authorization with trusted server-side userId props after consent POST', async () => {
         const store = new MemorySessionStore();
         const oauth = new FakeOAuthHelpers();
-        const { html, env } = await renderConsent(store, oauth);
-        const nonce = extractConsentNonce(html);
+        const { response: consentResponse, html, env } = await renderConsent(store, oauth);
+        const csrfToken = extractCsrfToken(html);
+        const consentCookie = extractConsentCookie(consentResponse);
 
-        const response = await handleAuthorizeRequest(createApprovalRequest(nonce), env);
+        const response = await handleAuthorizeRequest(createApprovalRequest(csrfToken, consentCookie), env);
 
         expect(response.status).toBe(302);
         expect(response.headers.get('Location')).toBe('https://assistant.example/callback?code=code-123&state=state-123');
+        expect(response.headers.get('Set-Cookie')).toContain('__Host-bkper_mcp_csrf=;');
+        expect(response.headers.get('Set-Cookie')).toContain('Max-Age=0');
         expect(oauth.completedAuthorization?.userId).toBe('user-123');
         expect(oauth.completedAuthorization?.scope).toEqual([]);
         expect(oauth.completedAuthorization?.props).toEqual({ userId: 'user-123' });
