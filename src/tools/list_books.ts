@@ -1,38 +1,26 @@
 import { CallToolResult, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
-import { Bkper } from 'bkper-js';
+import { Bkper, BooksDataTableBuilder } from 'bkper-js';
+
+import { formatCsv } from '../csv.js';
 
 interface ListBooksParams {
     filter: string;
 }
 
-interface BooksResponse {
-    total: number;
-    books: Array<bkper.Book>;
-}
-
-async function fetchBooks(bkper: Bkper, filter: string): Promise<{ books: Array<bkper.Book>; total: number }> {
-    const bkperBooks = await bkper.getBooks(filter);
-
-    const books = bkperBooks.map((book) => book.json());
-    const total = books.length;
-
-    return { books, total };
-}
-
 export async function handleListBooks(bkper: Bkper, params: ListBooksParams): Promise<CallToolResult> {
     try {
-        const { books, total } = await fetchBooks(bkper, params.filter);
-
-        const response: BooksResponse = {
-            total,
-            books
-        };
+        const books = await bkper.getBooks(params.filter);
+        const matrix = new BooksDataTableBuilder(books)
+            .ids(true)
+            .properties(true)
+            .hiddenProperties(true)
+            .build();
 
         return {
             content: [
                 {
                     type: 'text',
-                    text: JSON.stringify(response, null, 2),
+                    text: formatCsv(matrix),
                 },
             ],
         };
@@ -50,7 +38,7 @@ export async function handleListBooks(bkper: Bkper, params: ListBooksParams): Pr
 
 export const listBooksToolDefinition = {
     name: 'list_books',
-    description: 'List books with mandatory filtering by name or property',
+    description: 'List books with mandatory filtering by name or property. Returns compact CSV.',
     inputSchema: {
         type: 'object' as const,
         properties: {

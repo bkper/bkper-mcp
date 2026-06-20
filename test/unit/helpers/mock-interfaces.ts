@@ -1,3 +1,5 @@
+import type { Account, Amount, Transaction, TransactionsDataTableBuilder } from 'bkper-js';
+
 // TypeScript interfaces for test data - matches official bkper-api-types exactly
 
 // Group interface (referenced by Book and Account)
@@ -135,6 +137,20 @@ export interface AccountBalanceData {
 // Mock interfaces for bkper-js library
 export interface MockBook {
     json(): BookData;
+    getId?(): string;
+    getName?(): string;
+    getCollection?(): { getName(): string | undefined } | undefined;
+    getDatePattern?(): string;
+    getDecimalSeparator?(): string;
+    getFractionDigits?(): number | undefined;
+    getPeriod?(): string | undefined;
+    getOwnerName?(): string | undefined;
+    getPropertyKeys?(): string[];
+    getProperties?(): { [name: string]: string };
+    createTransactionsDataTable?(
+        transactions: Transaction[],
+        account?: Account
+    ): TransactionsDataTableBuilder;
     getAccounts?(): Promise<MockAccount[]>;
     getBalancesReport?(query?: string): Promise<MockBalanceReport>;
     listTransactions?(
@@ -147,6 +163,22 @@ export interface MockBook {
 
 export interface MockTransaction {
     json(): TransactionData;
+    getId(): string | undefined;
+    getStatus(): string;
+    getDateObject(): string;
+    getDateFormatted(): string | undefined;
+    getCreditAccountName(): Promise<string | undefined>;
+    getDebitAccountName(): Promise<string | undefined>;
+    getDescription(): string | undefined;
+    getAmount(): Amount | undefined;
+    getCreatedAt(): Date | string;
+    getCreatedAtFormatted(): string;
+    getPropertyKeys(): string[];
+    getProperty(key: string): string | undefined;
+    getRemoteIds(): string[];
+    getUrls(): string[];
+    getFiles(): Array<{ getUrl(): string | undefined }>;
+    getAccountBalance(): Promise<Amount | undefined>;
 }
 
 export interface MockBalance {
@@ -202,13 +234,15 @@ export interface MockBalanceReport {
 export interface MockTransactionIterator {
     hasNext(): boolean;
     next(): MockTransaction[];
+    getItems(): MockTransaction[];
     getCursor(): string | undefined;
+    getAccount(): Promise<Account | undefined>;
 }
 
 export interface MockBkper {
-    setConfig: (config: any) => void;
-    getBooks?(): Promise<MockBook[]>;
-    getBook?(id: string): Promise<MockBook>;
+    setConfig: (config: unknown) => void;
+    getBooks?(query?: string): Promise<MockBook[]>;
+    getBook?(id: string, includeAccounts?: boolean): Promise<MockBook>;
 }
 
 // BkperMcpServer type helper

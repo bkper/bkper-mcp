@@ -8,7 +8,7 @@
         "@cloudflare/workers-oauth-provider": "^0.8.0",
         "@modelcontextprotocol/sdk": "1.29.0",
         "agents": "^0.16.2",
-        "bkper-js": "^2.19.0",
+        "bkper-js": "^2.37.0",
         "google-auth-library": "^10.7.0",
         "hono": "^4.9.5",
         "zod": "^4.3.5",
@@ -345,7 +345,7 @@
 
     "bignumber.js": ["bignumber.js@9.3.1", "", {}, "sha512-Ko0uX15oIUS7wJ3Rb30Fs6SkVbLmPBAKdlm7q9+ak9bbIeFf0MwuBsQV6z7+X768/cHsfg+WlysDWJcmthjsjQ=="],
 
-    "bkper-js": ["bkper-js@2.19.0", "", { "dependencies": { "big.js": "^6.0.3", "dayjs": "^1.10.3", "luxon": "^1.25.0", "uuid": "^11.0.3" }, "peerDependencies": { "@bkper/bkper-api-types": "^5.32.0" } }, "sha512-W4dGreDXhg0o20Qy9UYa8B7S0WPIruBq+jBnUH90cr9NnwiEH/VCNMtRk647LTXY4H3ynY8vKOZ+/k9Ur6Y4+w=="],
+    "bkper-js": ["bkper-js@2.37.0", "", { "dependencies": { "@bkper/bkper-api-types": "^5.41.0", "big.js": "^6.0.3", "dayjs": "^1.10.3", "luxon": "^1.25.0", "uuid": "^11.0.3" } }, "sha512-5ivDcuYD/rF4GnsGf5kTJJrhNPKjL8YKnLbVk8HXBwUtM7JzaR1UT2bdooDdOOZcHypBvJSIGqeC2+K1ngILvA=="],
 
     "bl": ["bl@4.1.0", "", { "dependencies": { "buffer": "^5.5.0", "inherits": "^2.0.4", "readable-stream": "^3.4.0" } }, "sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w=="],
 
@@ -816,6 +816,8 @@
     "@rolldown/binding-wasm32-wasi/@emnapi/runtime": ["@emnapi/runtime@1.11.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-vgj7R3y3Wgx24IQaGPA/R6YFXLHVMOZ0uVEyIQPaWs+rd1AzfEMXlAC22FYwO1XkKR6NPsq7mUandH8oIRdZFw=="],
 
     "agents/esbuild": ["esbuild@0.28.1", "", { "optionalDependencies": { "@esbuild/aix-ppc64": "0.28.1", "@esbuild/android-arm": "0.28.1", "@esbuild/android-arm64": "0.28.1", "@esbuild/android-x64": "0.28.1", "@esbuild/darwin-arm64": "0.28.1", "@esbuild/darwin-x64": "0.28.1", "@esbuild/freebsd-arm64": "0.28.1", "@esbuild/freebsd-x64": "0.28.1", "@esbuild/linux-arm": "0.28.1", "@esbuild/linux-arm64": "0.28.1", "@esbuild/linux-ia32": "0.28.1", "@esbuild/linux-loong64": "0.28.1", "@esbuild/linux-mips64el": "0.28.1", "@esbuild/linux-ppc64": "0.28.1", "@esbuild/linux-riscv64": "0.28.1", "@esbuild/linux-s390x": "0.28.1", "@esbuild/linux-x64": "0.28.1", "@esbuild/netbsd-arm64": "0.28.1", "@esbuild/netbsd-x64": "0.28.1", "@esbuild/openbsd-arm64": "0.28.1", "@esbuild/openbsd-x64": "0.28.1", "@esbuild/openharmony-arm64": "0.28.1", "@esbuild/sunos-x64": "0.28.1", "@esbuild/win32-arm64": "0.28.1", "@esbuild/win32-ia32": "0.28.1", "@esbuild/win32-x64": "0.28.1" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-HrJrvZv5ayxBzPfwphOoNzkzOIIlifzk0KJrGK2c8R4+LKpMtpYLQeUdjnwjWv/LZlkH2laZk+4w78pi99D4Vw=="],
+
+    "bkper-js/@bkper/bkper-api-types": ["@bkper/bkper-api-types@5.41.0", "", {}, "sha512-sd6ip4Yuf1bPUArIk2um+Jcrxm+XXmpRmWt1OX3ZJ2WEO3UOy6Ungk2qwgxZvWZf2PcRhgPiaBe4V9Dc6ZIAZQ=="],
 
     "mimetext/mime-types": ["mime-types@2.1.35", "", { "dependencies": { "mime-db": "1.52.0" } }, "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw=="],
 

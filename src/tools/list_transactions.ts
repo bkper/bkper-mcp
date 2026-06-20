@@ -1,6 +1,8 @@
 import { CallToolResult, ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { Bkper } from 'bkper-js';
 
+import { formatCsv } from '../csv.js';
+
 interface ListTransactionsParams {
     bookId: string;
     cursor?: string;
@@ -8,12 +10,13 @@ interface ListTransactionsParams {
     limit?: number;
 }
 
-interface TransactionsResponse {
-    transactions: Array<Record<string, unknown>>;
-    hasMore: boolean;
-    cursor: string | null;
-    limit: number;
-    query?: string;
+function buildMetadataCsv(hasMore: boolean, cursor: string | undefined, limit: number, query: string): string {
+    return formatCsv([
+        ['hasMore', String(hasMore)],
+        ['cursor', cursor ?? ''],
+        ['limit', limit],
+        ['query', query],
+    ]);
 }
 
 export async function handleListTransactions(bkper: Bkper, params: ListTransactionsParams): Promise<CallToolResult> {
@@ -32,7 +35,7 @@ export async function handleListTransactions(bkper: Bkper, params: ListTransacti
             );
         }
 
-        const book = await bkper.getBook(params.bookId);
+        const book = await bkper.getBook(params.bookId, true);
         if (!book) {
             throw new McpError(
                 ErrorCode.InvalidParams,
@@ -43,38 +46,28 @@ export async function handleListTransactions(bkper: Bkper, params: ListTransacti
         const limit = Math.min(params.limit || 25, 100);
         const transactionList = await book.listTransactions(params.query, limit, params.cursor);
         const transactionItems = transactionList.getItems();
+        const nextCursor = transactionList.getCursor();
+        const account = await transactionList.getAccount();
 
-        const transactions = transactionItems.map((transaction) => {
-            const {
-                agentId,
-                agentName,
-                agentLogo,
-                agentLogoDark,
-                createdAt,
-                createdBy,
-                updatedAt,
-                dateValue,
-                ...cleanTransaction
-            } = transaction.json();
-            return cleanTransaction;
-        });
+        const matrix = await book
+            .createTransactionsDataTable(transactionItems, account)
+            .ids(true)
+            .formatDates(true)
+            .formatValues(true)
+            .properties(true)
+            .hiddenProperties(true)
+            .urls(true)
+            .recordedAt(true)
+            .build();
 
-        const hasMore = transactionItems.length > 0;
-        const nextCursor = transactionList.getCursor() || null;
-
-        const response: TransactionsResponse = {
-            transactions,
-            hasMore,
-            cursor: nextCursor,
-            limit,
-            query: params.query
-        };
+        const metadataCsv = buildMetadataCsv(Boolean(nextCursor), nextCursor, limit, params.query);
+        const tableCsv = formatCsv(matrix);
 
         return {
             content: [
                 {
                     type: 'text',
-                    text: JSON.stringify(response, null, 2),
+                    text: `${metadataCsv}\r\n\r\n${tableCsv}`,
                 },
             ],
         };
@@ -92,7 +85,7 @@ export async function handleListTransactions(bkper: Bkper, params: ListTransacti
 
 export const listTransactionsToolDefinition = {
     name: 'list_transactions',
-    description: 'List transactions with native API cursor-based pagination and query filtering. Use get_book first to understand query syntax and usage rules.',
+    description: 'List transactions as compact CSV with native API cursor-based pagination and query filtering. Output starts with metadata CSV rows (hasMore,cursor,limit,query), then a blank line, then the transaction table. Use get_book first to understand query syntax and usage rules.',
     inputSchema: {
         type: 'object' as const,
         properties: {

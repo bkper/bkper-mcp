@@ -3,6 +3,7 @@ import {
     MockBook,
     MockAccount,
     MockTransaction,
+    MockTransactionIterator,
     MockAccountBalance,
     MockGroup,
     MockDataTableBuilder,
@@ -12,6 +13,8 @@ import {
     AccountBalanceData,
     GroupData,
 } from './mock-interfaces.js';
+import { Amount, TransactionsDataTableBuilder } from 'bkper-js';
+import type { Book } from 'bkper-js';
 import { loadBalanceMatrixTotal, loadBalanceMatrixPeriod } from './fixture-loader.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -107,6 +110,82 @@ function createMockDataTableBuilder(
     };
 }
 
+function getPropertyKeys(properties?: { [name: string]: string }): string[] {
+    return Object.keys(properties ?? {}).sort();
+}
+
+function createMockBookBase(bookData: BookData): MockBook {
+    const mockBook: MockBook = {
+        json: (): BookData => bookData,
+        getId: (): string => bookData.id ?? '',
+        getName: (): string => bookData.name ?? '',
+        getCollection: () => {
+            if (!bookData.collection) {
+                return undefined;
+            }
+            return {
+                getName: (): string | undefined => bookData.collection?.name,
+            };
+        },
+        getDatePattern: (): string => bookData.datePattern ?? '',
+        getDecimalSeparator: (): string => bookData.decimalSeparator ?? '',
+        getFractionDigits: (): number | undefined => bookData.fractionDigits,
+        getPeriod: (): string | undefined => bookData.period,
+        getOwnerName: (): string | undefined => bookData.ownerName,
+        getPropertyKeys: (): string[] => getPropertyKeys(bookData.properties),
+        getProperties: (): { [name: string]: string } => ({ ...(bookData.properties ?? {}) }),
+        createTransactionsDataTable: (transactionsToBuild, account) =>
+            new TransactionsDataTableBuilder(
+                mockBook as unknown as Book,
+                transactionsToBuild,
+                account
+            ),
+    };
+    return mockBook;
+}
+
+function getTransactionStatus(transactionData: TransactionData): string {
+    if (transactionData.trashed) {
+        return 'TRASHED';
+    }
+    if (!transactionData.posted) {
+        return 'DRAFT';
+    }
+    if (transactionData.checked) {
+        return 'CHECKED';
+    }
+    return 'UNCHECKED';
+}
+
+function createMockTransaction(transactionData: TransactionData): MockTransaction {
+    return {
+        json: (): TransactionData => transactionData,
+        getId: (): string | undefined => transactionData.id,
+        getStatus: (): string => getTransactionStatus(transactionData),
+        getDateObject: (): string => transactionData.date ?? '',
+        getDateFormatted: (): string | undefined => transactionData.dateFormatted ?? transactionData.date,
+        getCreditAccountName: async (): Promise<string | undefined> =>
+            transactionData.creditAccount?.name ?? '',
+        getDebitAccountName: async (): Promise<string | undefined> =>
+            transactionData.debitAccount?.name ?? '',
+        getDescription: (): string | undefined => transactionData.description,
+        getAmount: (): Amount | undefined =>
+            transactionData.amount && transactionData.amount.trim() !== ''
+                ? new Amount(transactionData.amount)
+                : undefined,
+        getCreatedAt: (): Date | string =>
+            transactionData.createdAt ? new Date(Number(transactionData.createdAt)) : '',
+        getCreatedAtFormatted: (): string =>
+            transactionData.createdAt ? new Date(Number(transactionData.createdAt)).toISOString() : '',
+        getPropertyKeys: (): string[] => getPropertyKeys(transactionData.properties),
+        getProperty: (key: string): string | undefined => transactionData.properties?.[key],
+        getRemoteIds: (): string[] => transactionData.remoteIds ?? [],
+        getUrls: (): string[] => transactionData.urls ?? [],
+        getFiles: (): Array<{ getUrl(): string | undefined }> => [],
+        getAccountBalance: async (): Promise<Amount | undefined> => undefined,
+    };
+}
+
 // Factory for creating MockBkper instances for books listing
 export function createMockBkperForBooks(books: BookData[]): MockBkper {
     return {
@@ -122,9 +201,7 @@ export function createMockBkperForBooks(books: BookData[]): MockBkper {
                 );
             }
 
-            return filteredBooks.map((bookData: BookData) => ({
-                json: (): BookData => bookData,
-            }));
+            return filteredBooks.map((bookData: BookData) => createMockBookBase(bookData));
         },
     };
 }
@@ -146,7 +223,7 @@ export function createMockBkperForBook(
             }
 
             return {
-                json: (): BookData => book,
+                ...createMockBookBase(book),
 
                 // Accounts support
                 getAccounts: accounts
@@ -232,7 +309,7 @@ export function createMockBkperForBook(
 
                 // Transactions support
                 listTransactions: transactions
-                    ? async (query?: string, limit?: number, cursor?: string): Promise<any> => {
+                    ? async (query?: string, limit?: number, cursor?: string): Promise<MockTransactionIterator> => {
                           let filteredTransactions = transactions;
 
                           if (query) {
@@ -277,12 +354,16 @@ export function createMockBkperForBook(
                                 ).toString('base64')
                               : undefined;
 
+                          const pageItems = pageTransactions.map((transactionData: TransactionData) =>
+                              createMockTransaction(transactionData)
+                          );
+
                           return {
-                              getItems: (): MockTransaction[] =>
-                                  pageTransactions.map((transactionData: TransactionData) => ({
-                                      json: (): TransactionData => transactionData,
-                                  })),
-                              getCursor: () => nextCursor,
+                              hasNext: (): boolean => Boolean(nextCursor),
+                              next: (): MockTransaction[] => pageItems,
+                              getItems: (): MockTransaction[] => pageItems,
+                              getCursor: (): string | undefined => nextCursor,
+                              getAccount: async () => undefined,
                           };
                       }
                     : undefined,
