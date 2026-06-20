@@ -53,37 +53,6 @@ function buildHierarchicalStructure(groups: Group[]): GroupNode[] {
     return rootGroups;
 }
 
-function getSystemPrompt(): string {
-    // In Cloudflare Workers, we can't read files from filesystem
-    // The system prompt will be bundled or fetched from a different source
-    // For now, return a placeholder that will be replaced during build or runtime
-    return `# Bkper MCP Usage Guide
-
-## Essential Tools
-
-### Discovery
-- \`list_books()\` - Find available books
-- \`get_book({ bookId })\` - Book details, structure, and group hierarchies
-
-### Analysis
-- \`get_balances({ bookId, query })\` - **THE** tool for all balance analysis
-- \`list_transactions({ bookId, query })\` - Transaction inspection only (never for balance calculations)
-
-## Core Rules
-
-### 1. Root Group Discovery
-Always discover and use root groups dynamically based on account group types.
-
-### 2. Date Filter Matching
-- **Permanent accounts** (ASSET, LIABILITY): Use \`before:\` dates for point-in-time
-- **Non-permanent accounts** (INCOMING, OUTGOING): Use \`after:\` and \`before:\` for periods
-
-### 3. Balance Analysis Query Requirements (MANDATORY)
-- **MUST include either \`group:\` or \`account:\` operator in EVERY query**
-
-For complete documentation, visit https://bkper.com/docs`;
-}
-
 export async function handleGetBook(bkper: Bkper, params: GetBookParams): Promise<CallToolResult> {
     try {
         if (!params.bookId) {
@@ -110,7 +79,6 @@ export async function handleGetBook(bkper: Bkper, params: GetBookParams): Promis
 
         const response = {
             book: bookJson,
-            readme: getSystemPrompt()
         };
 
         return {
@@ -142,7 +110,7 @@ export async function handleGetBook(bkper: Bkper, params: GetBookParams): Promis
 
 export const getBookToolDefinition = {
     name: 'get_book',
-    description: 'Retrieve detailed information about a specific book including its group hierarchy and system prompt',
+    description: 'Retrieve detailed information about a specific book including its group hierarchy',
     inputSchema: {
         type: 'object' as const,
         properties: {

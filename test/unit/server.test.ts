@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { LATEST_PROTOCOL_VERSION } from '@modelcontextprotocol/sdk/types.js';
 import { BkperMcpServer } from '../../src/server.js';
 import { BookData, BkperMcpServerType } from './helpers/mock-interfaces.js';
 import { createMockBkperForBooks } from './helpers/mock-factory.js';
@@ -7,6 +8,16 @@ import { loadBooks } from './helpers/fixture-loader.js';
 
 // Load test data
 const mockBooks: BookData[] = loadBooks('');
+
+type RequestHandler = (request: unknown) => Promise<unknown>;
+
+type ServerWithRequestHandlers = {
+    _requestHandlers: Map<string, RequestHandler>;
+};
+
+interface InitializeResultWithInstructions {
+    instructions?: string;
+}
 
 describe('MCP Server - General Tests', () => {
     let server: BkperMcpServerType;
@@ -62,6 +73,29 @@ describe('MCP Server - General Tests', () => {
 
     it('should expose the high-level McpServer expected by Cloudflare createMcpHandler', () => {
         expect(server.getServer()).toBeInstanceOf(McpServer);
+    });
+
+    it('should send Bkper usage guidance as MCP server instructions during initialization', async () => {
+        const requestHandlers = (server.getServer().server as unknown as ServerWithRequestHandlers)._requestHandlers;
+        const initializeHandler = requestHandlers.get('initialize');
+        if (!initializeHandler) throw new Error('Initialize handler not found');
+
+        const result = await initializeHandler({
+            method: 'initialize',
+            params: {
+                protocolVersion: LATEST_PROTOCOL_VERSION,
+                capabilities: {},
+                clientInfo: {
+                    name: 'test-client',
+                    version: '1.0.0',
+                },
+            },
+        }) as InitializeResultWithInstructions;
+
+        expect(result.instructions).toContain('Root Group Discovery');
+        expect(result.instructions).toContain('get_book');
+        expect(result.instructions).toContain('get_balances');
+        expect(result.instructions).toContain('ALL get_balances queries MUST include either');
     });
 
 });

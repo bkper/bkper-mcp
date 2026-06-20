@@ -108,6 +108,8 @@ describe('MCP Server - get_book Tool Registration', () => {
         expect(getBookTool).toBeDefined();
         expect(getBookTool!.name).toBe('get_book');
         expect(getBookTool!.description).toContain('detailed information');
+        expect(getBookTool!.description).toContain('group hierarchy');
+        expect(getBookTool!.description).not.toContain('system prompt');
         expect(getBookTool!.inputSchema).toHaveProperty('properties');
         expect(getBookTool!.inputSchema.properties).toHaveProperty('bookId');
         expect(getBookTool!.inputSchema.required).toContain('bookId');
@@ -153,7 +155,7 @@ describe('MCP Server - get_book Tool Calls', () => {
         // Parse the JSON response
         const jsonResponse = JSON.parse(response.content[0].text as string);
         expect(jsonResponse).toHaveProperty('book');
-        expect(jsonResponse).toHaveProperty('readme');
+        expect(jsonResponse).not.toHaveProperty('readme');
 
         const book = jsonResponse.book;
         expect(book).toHaveProperty('id', 'book-1');

@@ -10,6 +10,7 @@ import { CallToolResult, ListToolsResult } from '@modelcontextprotocol/sdk/types
 import { Bkper } from 'bkper-js';
 import { z } from 'zod';
 
+import { BKPER_MCP_INSTRUCTIONS } from './instructions.js';
 import { handleGetBook, getBookToolDefinition } from './tools/get_book.js';
 import { handleGetBalances, getBalancesToolDefinition } from './tools/get_balances.js';
 import { handleListTransactions, listTransactionsToolDefinition } from './tools/list_transactions.js';
@@ -59,10 +60,15 @@ export class BkperMcpServer {
 
     constructor(bkper: Bkper) {
         this.bkper = bkper;
-        this.server = new McpServer({
-            name: 'bkper-mcp-server',
-            version: '0.1.0',
-        });
+        this.server = new McpServer(
+            {
+                name: 'bkper-mcp-server',
+                version: '0.1.0',
+            },
+            {
+                instructions: BKPER_MCP_INSTRUCTIONS,
+            },
+        );
 
         this.setupTools();
     }
