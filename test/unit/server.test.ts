@@ -68,6 +68,7 @@ describe('MCP Server - General Tests', () => {
             'get_balances',
             'list_transactions',
             'reference_index',
+            'execute',
         ]);
     });
 

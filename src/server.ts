@@ -16,6 +16,7 @@ import { handleGetBalances, getBalancesToolDefinition } from './tools/get_balanc
 import { handleListTransactions, listTransactionsToolDefinition } from './tools/list_transactions.js';
 import { handleListBooks, listBooksToolDefinition } from './tools/list_books.js';
 import { handleReferenceIndex, referenceIndexToolDefinition } from './tools/reference_index.js';
+import { handleExecute, executeToolDefinition, type ExecuteRunner } from './tools/execute.js';
 
 const listBooksInputSchema = {
     filter: z.string().describe(listBooksToolDefinition.inputSchema.properties.filter.description),
@@ -43,6 +44,10 @@ const listTransactionsInputSchema = {
 
 const referenceIndexInputSchema = {};
 
+const executeInputSchema = {
+    code: z.string().describe(executeToolDefinition.inputSchema.properties.code.description),
+};
+
 type RequestHandler = (request: unknown) => Promise<unknown>;
 
 type ServerWithRequestHandlers = {
@@ -54,12 +59,18 @@ function getTextFromToolResult(result: CallToolResult): string | undefined {
     return textContent && 'text' in textContent ? textContent.text : undefined;
 }
 
+export interface BkperMcpServerOptions {
+    executeRunner?: ExecuteRunner;
+}
+
 export class BkperMcpServer {
     private server: McpServer;
     private bkper: Bkper;
+    private executeRunner?: ExecuteRunner;
 
-    constructor(bkper: Bkper) {
+    constructor(bkper: Bkper, options: BkperMcpServerOptions = {}) {
         this.bkper = bkper;
+        this.executeRunner = options.executeRunner;
         this.server = new McpServer(
             {
                 name: 'bkper-mcp-server',
@@ -117,6 +128,15 @@ export class BkperMcpServer {
                 inputSchema: referenceIndexInputSchema,
             },
             () => handleReferenceIndex(),
+        );
+
+        this.server.registerTool(
+            executeToolDefinition.name,
+            {
+                description: executeToolDefinition.description,
+                inputSchema: executeInputSchema,
+            },
+            (args) => handleExecute(args, this.executeRunner),
         );
     }
 
