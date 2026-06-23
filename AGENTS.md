@@ -1,9 +1,18 @@
-# Bkper MCP Agent Instructions
+# Bkper MCP Public Distribution Repo
 
-This project is the first-party remote MCP server for Bkper.
+This repository is public-facing and distribution-only.
 
-## Required Local Context
+Canonical server implementation lives in:
 
-Before changing MCP transport, OAuth, session handoff, Codemode, sandboxing, or deployment behavior, read:
+```text
+/workspace/bkper-clients/packages/mcp
+```
 
-- `docs/remote-mcp-design.md`
+Use this repository for:
+
+- Bkper App metadata (`bkper.yaml`)
+- installation and usage instructions
+- public assets such as logos and screenshots
+- user-facing communication for ChatGPT, Claude, and other MCP clients
+
+Do not add Worker implementation code, secrets, deployment configuration, internal API details, or private operational runbooks here.

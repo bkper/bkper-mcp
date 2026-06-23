@@ -1,58 +1,125 @@
 # Bkper MCP
 
-Connect AI assistants to [Bkper](https://bkper.com) through a first-party Model Context Protocol (MCP) server.
+Connect ChatGPT, Claude, and other Model Context Protocol (MCP) clients to [Bkper](https://bkper.com).
 
-Bkper MCP lets compatible AI clients read Bkper books, balances, and transactions using your existing Bkper permissions. Advanced workflows are planned through a sandboxed execution environment that uses the official `bkper-js` SDK while keeping Bkper Core responsible for permissions, audit, and ledger invariants.
-
-## Status
-
-Bkper MCP is in development and is planned for:
+Bkper MCP is the official hosted MCP endpoint for Bkper. It lets compatible AI assistants work with Bkper using your existing Bkper account permissions.
 
 ```text
 https://mcp.bkper.app
 ```
 
-Public connection instructions will be added when the hosted service is available.
+This repository contains public app metadata, assets, and user-facing installation instructions. It is not a self-hosting template.
 
-## What You Can Do
+## What it can do
 
-The initial public typed tools are read-only:
+Bkper MCP helps AI assistants:
 
-| Capability | Description |
-|-----------|-------------|
-| List books | Find Bkper books available to your account |
-| Get book details | Inspect book metadata, accounts, groups, and hierarchy |
-| Query balances | Ask for balances using Bkper queries |
-| List transactions | Search and paginate transactions |
+- list the Bkper books available to your account;
+- inspect book metadata, accounts, groups, and hierarchy;
+- query balances through Bkper's deterministic balance APIs;
+- search and list transactions;
+- use Bkper documentation references when writing or explaining workflows.
 
-Write workflows are planned for the sandboxed Codemode `execute` tool. All writes will still go through Bkper Core and use the same permissions, audit rules, and zero-sum transaction invariants as the Bkper app and API.
+Advanced workflows may be available during rollout. Treat any advanced action as running with your authenticated Bkper permissions, and use test books until you are confident with the flow.
 
-## Security Model
+## Install in ChatGPT
 
-Bkper MCP is designed as first-party access to Bkper:
+1. Open ChatGPT settings.
+2. Go to **Connectors** or **MCP connectors**.
+3. Choose **Add custom connector**.
+4. Use this MCP server URL:
 
-- You authenticate with your Bkper account.
-- The MCP server acts with your existing Bkper permissions.
-- Raw Bkper OAuth tokens are not exposed to MCP clients.
-- Bkper Core remains the authority for permissions and audit.
-- Actions are attributed to the Bkper MCP app identity.
+   ```text
+   https://mcp.bkper.app
+   ```
 
-Only connect AI assistants and MCP clients you trust.
+5. Complete the Bkper authorization flow in your browser.
+6. Return to ChatGPT and ask it to list your Bkper books.
 
-## Deployment Configuration
+Suggested first prompt:
 
-The remote server needs first-party Bkper infrastructure bindings before deployment:
+```text
+Use Bkper MCP to list my Bkper books. Do not make any changes.
+```
 
-- `API_DOMAIN` — Bkper API domain, such as `api.bkper.app` or `api-dev.bkper.app`.
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — service account JSON for Bkper Private API calls.
-- `OAUTH_KV` — stores MCP OAuth clients, grants, access tokens, and refresh tokens.
-- `SESSIONS` — shared Dispatch session KV used for Bkper web session handoff.
+## Install in Claude
 
-## Bkper References
+1. Open Claude settings.
+2. Go to **Connectors**.
+3. Choose **Add custom connector**.
+4. Name it `Bkper`.
+5. Use this MCP server URL:
+
+   ```text
+   https://mcp.bkper.app
+   ```
+
+6. Complete the Bkper authorization flow in your browser.
+7. Return to Claude and ask it to list your Bkper books.
+
+Suggested first prompt:
+
+```text
+Use Bkper MCP to list my Bkper books. Do not make any changes.
+```
+
+> Product labels in ChatGPT and Claude can change. If you do not see custom MCP connectors, check whether your plan, workspace, or client version supports remote MCP servers.
+
+## Safe usage
+
+Bkper uses a from/to movement model. Every transaction moves a resource **from** one account **to** another, and Bkper Core protects the zero-sum invariant.
+
+When asking an AI assistant to work with Bkper:
+
+- start with read-only tasks;
+- name the book you want to use;
+- ask the assistant to explain its plan before any change;
+- require explicit confirmation before creating, posting, checking, updating, trashing, or deleting data;
+- use test books for early experiments.
+
+Example prompts:
+
+```text
+List my Bkper books and ask me which one to use.
+```
+
+```text
+Show the account and group structure for this book. Do not change anything.
+```
+
+```text
+Get balances for group:Assets before:2026-01-01. Do not calculate balances yourself; use Bkper.
+```
+
+```text
+Search unchecked transactions after:2026-01-01 and summarize what needs review.
+```
+
+```text
+Before making any change in Bkper, explain the exact plan and ask for my confirmation.
+```
+
+## Permissions and security
+
+When you connect Bkper MCP:
+
+- you authenticate with your Bkper account;
+- the AI assistant can use Bkper with the same permissions you have;
+- Bkper MCP does not give the AI client your raw Bkper OAuth token;
+- Bkper Core remains responsible for permissions, audit, transaction state rules, lock dates, and ledger invariants;
+- Bkper activity is attributed to the `bkper-mcp` app identity.
+
+Only connect assistants and MCP clients you trust.
+
+## Bkper references
 
 - [Core Concepts](https://bkper.com/docs/core-concepts.md)
 - [bkper-js API](https://bkper.com/docs/api/bkper-js.md)
 - [LLM documentation index](https://bkper.com/llms.txt)
+
+## Feedback
+
+Please open an issue in this repository with installation problems, client-specific notes, or documentation improvements.
 
 ## License
 

@@ -1,0 +1,13 @@
+id: bkper-mcp
+name: Bkper MCP
+description: Connect ChatGPT, Claude, and other MCP clients to Bkper.
+logoUrl: https://raw.githubusercontent.com/bkper/bkper-mcp/main/assets/logo.svg
+logoUrlDark: https://raw.githubusercontent.com/bkper/bkper-mcp/main/assets/logo.svg
+website: https://github.com/bkper/bkper-mcp
+ownerName: Bkper
+ownerLogoUrl: https://raw.githubusercontent.com/bkper/bkper-mcp/main/assets/logo.svg
+ownerWebsite: https://bkper.com
+repoUrl: https://github.com/bkper/bkper-mcp
+repoPrivate: false
+developers: *@bkper.com
+deprecated: false
