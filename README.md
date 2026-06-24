@@ -12,15 +12,33 @@ This repository contains public app metadata, assets, and user-facing installati
 
 ## What it can do
 
-Bkper MCP helps AI assistants:
+Bkper MCP exposes typed tools for Bkper books, accounts, groups, transactions, balances, sharing, and app metadata.
+
+### Read-only tools
+
+AI assistants can:
 
 - list the Bkper books available to your account;
-- inspect book metadata, accounts, groups, and hierarchy;
-- query balances through Bkper's deterministic balance APIs;
-- search and list transactions;
-- use Bkper documentation references when writing or explaining workflows.
+- inspect book metadata, configuration, installed apps, collection context, groups, and hierarchy;
+- list and inspect accounts;
+- query deterministic balances and financial reports through Bkper balance APIs;
+- search, list, and inspect transactions;
+- list existing book shares;
+- look up Bkper app metadata when troubleshooting installed apps.
 
-Advanced workflows may be available during rollout. Treat any advanced action as running with your authenticated Bkper permissions, and use test books until you are confident with the flow.
+### Changes it can make
+
+When authorized by you and allowed by your Bkper permissions, AI assistants can also:
+
+- create and update books;
+- create, update, archive, unarchive, or delete accounts;
+- create, update, or delete groups;
+- create or update book shares, and remove book shares;
+- create transaction drafts;
+- update draft or unchecked transactions;
+- post, check, uncheck, trash, untrash, or merge transactions.
+
+Bkper Core still enforces permissions, lock dates, checked transaction rules, deletion constraints, audit, and ledger invariants.
 
 ## Install in ChatGPT
 
@@ -67,14 +85,14 @@ Use Bkper MCP to list my Bkper books. Do not make any changes.
 
 ## Safe usage
 
-Bkper uses a from/to movement model. Every transaction moves a resource **from** one account **to** another, and Bkper Core protects the zero-sum invariant.
+Bkper uses a from/to movement model. Every posted transaction moves a resource **from** one account **to** another, and Bkper Core protects the zero-sum invariant.
 
 When asking an AI assistant to work with Bkper:
 
 - start with read-only tasks;
 - name the book you want to use;
 - ask the assistant to explain its plan before any change;
-- require explicit confirmation before creating, posting, checking, updating, trashing, or deleting data;
+- require explicit confirmation before creating, posting, checking, updating, sharing, archiving, trashing, merging, or deleting data;
 - use test books for early experiments.
 
 Example prompts:
