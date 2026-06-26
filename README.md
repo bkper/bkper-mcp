@@ -49,9 +49,9 @@ Bkper Core still enforces permissions, lock dates, checked transaction rules, de
 3. Choose **Add custom connector**.
 4. Use this MCP server URL:
 
-   ```text
-   https://mcp.bkper.app/mcp
-   ```
+    ```text
+    https://mcp.bkper.app/mcp
+    ```
 
 5. Complete the Bkper authorization flow in your browser.
 6. Return to ChatGPT and ask it to list your Bkper books.
@@ -70,9 +70,9 @@ Use Bkper MCP to list my Bkper books. Do not make any changes.
 4. Name it `Bkper`.
 5. Use this MCP server URL:
 
-   ```text
-   https://mcp.bkper.app/mcp
-   ```
+    ```text
+    https://mcp.bkper.app/mcp
+    ```
 
 6. Complete the Bkper authorization flow in your browser.
 7. Return to Claude and ask it to list your Bkper books.
@@ -86,8 +86,6 @@ Use Bkper MCP to list my Bkper books. Do not make any changes.
 > Product labels in ChatGPT and Claude can change. If you do not see custom MCP connectors, check whether your plan, workspace, or client version supports remote MCP servers.
 
 ## Safe usage
-
-Bkper uses a from/to movement model. Every posted transaction moves a resource **from** one account **to** another, and Bkper Core protects the zero-sum invariant.
 
 When asking an AI assistant to work with Bkper:
 
@@ -130,17 +128,3 @@ When you connect Bkper MCP:
 - Bkper activity is attributed to the `bkper-mcp` app identity.
 
 Only connect assistants and MCP clients you trust.
-
-## Bkper references
-
-- [Core Concepts](https://bkper.com/docs/core-concepts.md)
-- [bkper-js API](https://bkper.com/docs/api/bkper-js.md)
-- [LLM documentation index](https://bkper.com/llms.txt)
-
-## Feedback
-
-Please open an issue in this repository with installation problems, client-specific notes, or documentation improvements.
-
-## License
-
-Apache-2.0
