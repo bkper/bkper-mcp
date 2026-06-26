@@ -4,8 +4,10 @@ Connect ChatGPT, Claude, and other Model Context Protocol (MCP) clients to [Bkpe
 
 Bkper MCP is the official hosted MCP endpoint for Bkper. It lets compatible AI assistants work with Bkper using your existing Bkper account permissions.
 
+Use the canonical MCP server URL:
+
 ```text
-https://mcp.bkper.app
+https://mcp.bkper.app/mcp
 ```
 
 This repository contains public app metadata, assets, and user-facing installation instructions. It is not a self-hosting template.
@@ -48,7 +50,7 @@ Bkper Core still enforces permissions, lock dates, checked transaction rules, de
 4. Use this MCP server URL:
 
    ```text
-   https://mcp.bkper.app
+   https://mcp.bkper.app/mcp
    ```
 
 5. Complete the Bkper authorization flow in your browser.
@@ -69,7 +71,7 @@ Use Bkper MCP to list my Bkper books. Do not make any changes.
 5. Use this MCP server URL:
 
    ```text
-   https://mcp.bkper.app
+   https://mcp.bkper.app/mcp
    ```
 
 6. Complete the Bkper authorization flow in your browser.
