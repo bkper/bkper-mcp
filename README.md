@@ -44,19 +44,19 @@ Help me set up Bkper for my small service business called Bright Studio.
 ```
 
 ```text
-Show me a balance sheet as of today for my book.
-```
-
-```text
-Show me profit and loss for 2025 for my book.
-```
-
-```text
 Find possible duplicate transactions in January 2024 in my book.
 ```
 
 ```text
 Help me understand why the Exchange Bot is not working in my book.
+```
+
+```text
+Show me the 2025 balance sheet and profit and loss for my book.
+```
+
+```text
+Prepare a 2025 tax filing worksheet for my accountant using my book.
 ```
 
 ## How it works
@@ -89,7 +89,8 @@ AI assistants can:
 - query deterministic balances and financial reports through Bkper balance APIs;
 - search, list, and inspect transactions;
 - list existing book shares;
-- look up Bkper app metadata when troubleshooting installed apps.
+- look up Bkper app metadata when troubleshooting installed apps;
+- load public OpenAccountants tax-rule bundles and accountant referral metadata by jurisdiction, without sending private Bkper book data to OpenAccountants.
 
 ### Write tools
 
