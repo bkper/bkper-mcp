@@ -37,38 +37,26 @@ https://mcp.bkper.app/mcp
 
 ## Start with safe prompts
 
-Begin with simple, read-only requests while you learn how your assistant works with Bkper. Use natural language dates like “today,” “last month,” “this quarter,” or “2025.”
+Use small, focused prompts while you learn how your assistant works with Bkper. Replace the sample business, book, and dates with your own.
 
 ```text
-Show me a balance sheet as of today.
+Help me set up Bkper for my small service business called Bright Studio.
 ```
 
 ```text
-Show me profit and loss for last month.
+Show me a balance sheet as of today for my book.
 ```
 
 ```text
-Show me profit and loss for 2025.
+Show me profit and loss for 2025 for my book.
 ```
 
 ```text
-Find possible duplicate transactions from last month.
+Find possible duplicate transactions in January 2024 in my book.
 ```
 
 ```text
-Spot unusual transactions this quarter.
-```
-
-```text
-Review unchecked transactions from this month.
-```
-
-```text
-Help me understand why the Exchange Bot is not working in this book.
-```
-
-```text
-Just show me what you find. Don't change anything yet.
+Help me understand why the Exchange Bot is not working in my book.
 ```
 
 ## How it works
