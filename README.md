@@ -52,11 +52,11 @@ Help me understand why the Exchange Bot is not working in my book.
 ```
 
 ```text
-Show me the 2025 balance sheet and profit and loss for my book.
+Show me the 2026 balance sheet and profit and loss for my book.
 ```
 
 ```text
-Help me prepare my 2025 tax filing using my book.
+Help me prepare my 2026 tax filing using my book.
 ```
 
 ## How it works
