@@ -56,7 +56,7 @@ Show me the 2025 balance sheet and profit and loss for my book.
 ```
 
 ```text
-Prepare a 2025 tax filing worksheet for my accountant using my book.
+Help me prepare my 2025 tax filing using my book.
 ```
 
 ## How it works
