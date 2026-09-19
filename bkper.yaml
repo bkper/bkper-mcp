@@ -1,6 +1,6 @@
 id: bkper-mcp
 name: Bkper MCP
-description: Use ChatGPT, Claude, or another MCP client with your Bkper books.
+description: Connect Bkper to ChatGPT or Claude on the web to ask questions, review transactions, and create reports.
 logoUrl: https://raw.githubusercontent.com/bkper/bkper-mcp/main/assets/bkper-mcp-logo.svg
 ownerName: Bkper
 ownerLogoUrl: https://avatars.githubusercontent.com/u/11943086?v=4

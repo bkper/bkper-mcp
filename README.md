@@ -1,12 +1,12 @@
 # Bkper MCP
 
-Use ChatGPT, Claude, or another Model Context Protocol (MCP) client with your Bkper books.
+Use Bkper with ChatGPT, Claude, or another compatible assistant on the web. Ask questions about your books, review transactions, and create reports without installing local tools.
 
-Bkper MCP lets an AI assistant use Bkper through your existing Bkper account permissions. It exposes tools for Bkper books, accounts, groups, transactions, balances, sharing, and app metadata. Some tools are read-only. Write tools are available only when authorized by you and allowed by your Bkper permissions.
+Bkper MCP is the connector between the assistant and Bkper. ChatGPT or Claude remains the assistant and continues using its own models; Bkper MCP does not switch it to Bkper AI models.
 
-Bkper remains the source of truth. Balances and financial reports come from Bkper APIs, and Bkper Core still enforces permissions, lock dates, checked transaction rules, audit history, deletion constraints, and ledger invariants.
+Bkper remains the source of truth: balances and financial reports come from Bkper APIs, while Bkper Core continues to enforce permissions, lock dates, checked transaction rules, audit history, deletion constraints, and ledger invariants.
 
-## Quick start
+## Connect Bkper to ChatGPT or Claude
 
 Use the official hosted MCP server URL:
 
@@ -35,9 +35,9 @@ https://mcp.bkper.app/mcp
 
 > Product labels in ChatGPT and Claude can change. If you do not see custom MCP connectors, check whether your plan, workspace, or client version supports remote MCP servers.
 
-## Start with safe prompts
+## Get your first useful result
 
-Use small, focused prompts while you learn how your assistant works with Bkper. Replace the sample business, book, and dates with your own.
+Start with a read-only question or report. Replace the sample business, book, and dates with your own.
 
 ```text
 Help me set up Bkper for my small service business called Bright Studio.
@@ -52,7 +52,7 @@ Help me understand why the Exchange Bot is not working in my book.
 ```
 
 ```text
-Show me the 2026 balance sheet and profit and loss for my book.
+Create a profit and loss report for last month from my Bkper book. Use Bkper balances as the source of truth, explain the reporting period, and do not change anything in my book.
 ```
 
 ```text
